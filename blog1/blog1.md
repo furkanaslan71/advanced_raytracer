@@ -449,3 +449,56 @@ Flat:
 Smooth:
 
 ![other_dragon_flat](images/other_dragon_smooth.png)
+
+# Results
+The time measurement unit is seconds. 
+
+INEK Machines Single Thread Benchmark:
+
+bunny: 1.72
+
+scienceTree: 6.48
+
+spheres_with_plane: 1.09
+
+cornellbox: 3.79
+
+bunny_with_plane: 16.61
+
+cornellbox_recursive: 5.22
+
+spheres: 2.00
+
+scienceTree_glass: 19.63
+
+two_spheres: 0.32
+
+other_dragon: 36.13
+
+simple: 0.67
+
+spheres_mirror: 1.94
+
+chinese_dragon: 19.53
+
+lobster: 334.5
+
+raven: 24.64
+
+David: 26.56
+
+UtahTeapotMugCENG: 23.48
+
+windmill_smooth: 36.58
+
+low_poly_scene_smooth: 32.04
+
+berserker_smooth: 7.89
+
+trex_smooth: 64.31
+
+tower_smooth: 49.33
+
+Car_smooth and Car_front_smooth: 39.02
+
+ton_Roosendaal_smooth: 34.99
