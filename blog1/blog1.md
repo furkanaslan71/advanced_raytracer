@@ -393,5 +393,57 @@ private:
 ```
 
 # Difficulties
-Except the `dielectric` material, other shading computations was very straight forward. First, I wrote my equations exactly according to the lecture slides, but I couldn't get the desired output image. After a few tries I gave up and asked ChatGPT to debug my `dielectric` shading computations and it said my fresnel equations was wrong. According to it, there was a sign error in the denominator of `r_perpendicular`. 
+Except the `dielectric` material, other shading computations was very straight forward. First, I wrote my equations exactly according to the lecture slides, but I couldn't get the desired output image. After a few tries I gave up and asked ChatGPT to debug my `dielectric` shading computations and it said my fresnel equations was wrong. According to it, there was a sign error in the denominator of `r_perpendicular`. The formula in the slides:
 
+
+<p align="center">
+  <figure style="display:inline-block; text-align:center; margin:10px;">
+    <img src="images/blog1_r_perpendicular.png" width="50%">
+    <figcaption>In slides</figcaption>
+  </figure>
+  <figure style="display:inline-block; text-align:center; margin:10px;">
+    <img src="images/blog1_r_perpendicular_wikipedia.png" width="75%">
+    <figcaption>In wikipedia</figcaption>
+  </figure>
+</p>
+
+As I got the correct image with the second result, i stick with it.
+
+Another difficulty I came across is `parser`. When writing it, if a field which is stated in the pdf is not given I set their values as `default = 0.0`. I assumed the fields like `ShadowRayEpsilon` or `MaxRecursionDepth` is present in all input files but in some files they were missing. For example, in `cornellbox` there were no `ShadowRayEpsilon` or `IntersectionTestEpsilon`. As the `default = 0.0`, the resulting image had black dots on spheres. I set `default = 1e-6`.
+
+
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: flex-start;">
+  <figure style="text-align: center; margin: 0;">
+    <img src="images/cornellbox_cursed.png" width="75%">
+    <figcaption>epsilon = 0</figcaption>
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="images/cornellbox.png" width="75%">
+    <figcaption>epsilon = 1e-6</figcaption>
+  </figure>
+</div>
+
+
+
+In `bunny` and `bunny_with_plane` there were no `MaxRecursionDepth`. `bunny` had no problem as the scene did not have any mirrors so I did not recognized that then, but when I implemented the `plane` and `mirror` material I noticed that there was a problem. At first glance, I thought I made a mistake in there two but it turned out the `bunny_with_plane.json` was root of the problem. I set `default = 6`.
+
+<div style="display: flex; justify-content: center; gap: 20px; align-items: flex-start;">
+  <figure style="text-align: center; margin: 0;">
+    <img src="images/bunny_with_plane_cursed.png" width="75%">
+    <figcaption>depth = 0</figcaption>
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="images/bunny_with_plane.png" width="75%">
+    <figcaption>depth = 6</figcaption>
+  </figure>
+</div>
+
+# Observations
+I am not sure whether I did something wrong or really noticed something, but it seems that `other_dragon`'s output image is rendered in `smooth` shading mode. My initial image was a bit noisy in the wings and it was not smooth looking like the provided output. I tried to render it with `smooth` mode by changing the input and I got the exact same image as the desired output. 
+
+Flat:
+![other_dragon_flat](images/other_dragon.png)
+
+Smooth:
+![other_dragon_flat](images/other_dragon_smooth.png)
