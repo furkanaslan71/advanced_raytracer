@@ -398,11 +398,11 @@ Except the `dielectric` material, other shading computations was very straight f
 
 <p align="center">
   <figure style="display:inline-block; text-align:center; margin:10px;">
-    <img src="images/blog1_r_perpendicular.png" width="50%">
+    <img src="images/blog1_r_perpendicular.png" width="300">
     <figcaption>In slides</figcaption>
   </figure>
   <figure style="display:inline-block; text-align:center; margin:10px;">
-    <img src="images/blog1_r_perpendicular_wikipedia.png" width="75%">
+    <img src="images/blog1_r_perpendicular_wikipedia.png" width="300">
     <figcaption>In wikipedia</figcaption>
   </figure>
 </p>
@@ -415,11 +415,11 @@ Another difficulty I came across is `parser`. When writing it, if a field which 
 
 <div style="display: flex; justify-content: center; gap: 20px; align-items: flex-start;">
   <figure style="text-align: center; margin: 0;">
-    <img src="images/cornellbox_cursed.png" width="75%">
+    <img src="images/cornellbox_cursed.png" width="400">
     <figcaption>epsilon = 0</figcaption>
   </figure>
   <figure style="text-align: center; margin: 0;">
-    <img src="images/cornellbox.png" width="75%">
+    <img src="images/cornellbox.png" width="400">
     <figcaption>epsilon = 1e-6</figcaption>
   </figure>
 </div>
@@ -430,11 +430,11 @@ In `bunny` and `bunny_with_plane` there were no `MaxRecursionDepth`. `bunny` had
 
 <div style="display: flex; justify-content: center; gap: 20px; align-items: flex-start;">
   <figure style="text-align: center; margin: 0;">
-    <img src="images/bunny_with_plane_cursed.png" width="75%">
+    <img src="images/bunny_with_plane_cursed.png" width="400">
     <figcaption>depth = 0</figcaption>
   </figure>
   <figure style="text-align: center; margin: 0;">
-    <img src="images/bunny_with_plane.png" width="75%">
+    <img src="images/bunny_with_plane.png" width="400">
     <figcaption>depth = 6</figcaption>
   </figure>
 </div>
