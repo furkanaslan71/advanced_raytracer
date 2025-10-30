@@ -443,7 +443,9 @@ In `bunny` and `bunny_with_plane` there were no `MaxRecursionDepth`. `bunny` had
 I am not sure whether I did something wrong or really noticed something, but it seems that `other_dragon`'s output image is rendered in `smooth` shading mode. My initial image was a bit noisy in the wings and it was not smooth looking like the provided output. I tried to render it with `smooth` mode by changing the input and I got the exact same image as the desired output. 
 
 Flat:
+
 ![other_dragon_flat](images/other_dragon.png)
 
 Smooth:
+
 ![other_dragon_flat](images/other_dragon_smooth.png)
