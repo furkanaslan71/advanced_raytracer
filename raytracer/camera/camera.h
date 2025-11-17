@@ -24,26 +24,31 @@ public:
 	int id;
 	std::string image_name;
 	Camera();
-	Camera(const Camera_& cam);
+	Camera(
+		const Camera_& cam,
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations
+	);
 	~Camera();
 	void render(IN const BaseRayTracer& rendering_technique,		
 							OUT std::vector<std::vector<Color>>& image) const;
 
+	glm::mat4 composite_transformation_matrix;
+
 private:	
-	Vec3 position;
-	Vec3 gaze;
-	Vec3 up;
+	Vec3 position, gaze, up;
 	double near_plane[4]; // l, r, b, t
 	double near_distance;
-	int image_width;
-	int image_height;
-	Vec3 w;
-	Vec3 u;
-	Vec3 v;
-	Vec3 q;
-	Vec3 su;
-	Vec3 sv;
-	Vec3 m;
+	int image_width, image_height;
+	Vec3 w, u, v, q, su, sv, m;
+	glm::mat4 calculateCompositeTransformationMatrix(
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations);
+
+	std::vector<std::string> transformations;
+
 };
 
 #endif //CAMERA_H

@@ -1,34 +1,26 @@
 {
   "Scene": {
+    "MaxRecursionDepth": "6",
     "BackgroundColor": "0 0 0",
-    "ShadowRayEpsilon": "1e-3",
-    "IntersectionTestEpsilon": "1e-6",
     "Cameras": {
       "Camera": {
         "_id": "1",
-        "Position": "0 2.5 0",
-        "Gaze": "0 -0.2 -1",
+        "Position": "0 5 25",
+        "Gaze": "0 0 -1",
         "Up": "0 1 0",
         "NearPlane": "-1 1 -1 1",
-        "NearDistance": "10",
-        "ImageResolution": "720 720",
+        "NearDistance": "1",
+        "ImageResolution": "800 800",
         "ImageName": "spheres.png"
       }
     },
     "Lights": {
       "AmbientLight": "25 25 25",
-      "PointLight": [
-        {
-          "_id": "1",
-          "Position": "-4 4 -13",
-          "Intensity": "8550 8550 8550"
-        },
-        {
-          "_id": "2",
-          "Position": "4 4 -13",
-          "Intensity": "8550 8550 8550"
-        }
-      ]
+      "PointLight": {
+        "_id": "1",
+        "Position": "0 30 50",
+        "Intensity": "1000000 1000000 1000000"
+      }
     },
     "Materials": {
       "Material": [
@@ -37,7 +29,7 @@
           "AmbientReflectance": "1 1 1",
           "DiffuseReflectance": "1 1 1",
           "SpecularReflectance": "1 1 1",
-          "PhongExponent": "100"
+          "PhongExponent": "1"
         },
         {
           "_id": "2",
@@ -45,77 +37,81 @@
           "DiffuseReflectance": "1 0 0",
           "SpecularReflectance": "1 1 1",
           "PhongExponent": "100"
+        }
+      ]
+    },
+    "Transformations": {
+      "Translation": [
+        {
+          "_data": "-10 5 10",
+          "_id": "1"
         },
         {
-          "_id": "3",
-          "AmbientReflectance": "1 1 1",
-          "DiffuseReflectance": "0 1 0",
-          "SpecularReflectance": "1 1 1",
-          "PhongExponent": "100"
+          "_data": "0 5 0",
+          "_id": "2"
         },
         {
-          "_id": "4",
-          "AmbientReflectance": "1 1 1",
-          "DiffuseReflectance": "0.2 0.2 0.2",
-          "SpecularReflectance": "0 0 0",
-          "PhongExponent": "1"
+          "_data": "15 5 -10",
+          "_id": "3"
         },
         {
-          "_id": "5",
-          "AmbientReflectance": "1 1 1",
-          "DiffuseReflectance": "0.1 0.9 0.9",
-          "SpecularReflectance": "0 0 0",
-          "PhongExponent": "1"
+          "_data": "50 5 -40",
+          "_id": "4"
+        }
+      ],
+      "Scaling": [
+        {
+          "_data": "5 5 5",
+          "_id": "1"
+        },
+        {
+          "_data": "100 1 100",
+          "_id": "2"
         }
       ]
     },
     "VertexData": {
-      "_data": "-10 -0.8 0 10 -0.8 0 -10 -0.8 -100 10 -0.8 -100 0 -0.2 -17 0.5 -0.5 -15 1.0 -0.5 -16 -1.0 -0.5 -13 -0.2 -0.5 -14",
+      "_data": "-1 0 1 1 0 1 1 0 -1 -1 0 -1 0 0 0",
       "_type": "xyz"
     },
     "Objects": {
-      "Triangle": [
-        {
-          "_id": "1",
-          "Indices": "1 2 3",
-          "Material": "4"
+      "Mesh": {
+        "_id": "1",
+        "Material": "1",
+        "Faces": {
+          "_data": "3 1 2 1 3 4",
+          "_type": "triangle"
         },
-        {
-          "_id": "2",
-          "Indices": "3 2 4",
-          "Material": "4"
-        }
-      ],
+        "Transformations": "s2"
+      },
       "Sphere": [
         {
           "_id": "1",
+          "Material": "2",
           "Center": "5",
-          "Radius": "0.6",
-          "Material": "2"
+          "Radius": "1",
+          "Transformations": "s1 t1"
         },
         {
           "_id": "2",
-          "Center": "6",
-          "Radius": "0.3",
-          "Material": "5"
+          "Material": "2",
+          "Center": "5",
+          "Radius": "1",
+          "Transformations": "s1 t2"
         },
         {
           "_id": "3",
-          "Center": "7",
-          "Radius": "0.3",
-          "Material": "3"
+          "Material": "2",
+          "Center": "5",
+          "Radius": "1",
+          "Transformations": "s1 t3"
         },
         {
           "_id": "4",
-          "Center": "8",
-          "Radius": "0.3",
-          "Material": "1"
-        },
-        {
-          "_id": "5",
-          "Center": "9",
-          "Radius": "0.3",
-          "Material": "5"
+          "Material": "2",
+          "Center": "5",
+          "Radius": "1",
+          "Transformations": "s1 t4"
         }
       ]
     }

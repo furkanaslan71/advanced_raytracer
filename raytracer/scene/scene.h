@@ -16,6 +16,11 @@ public:
 	Scene();
 	Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& objects);
 	~Scene();
+	glm::mat4 calculateCompositeTransformationMatrix(
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations,
+		const PointLight_& raw_light);
 
 	std::vector<Camera> cameras;
 	Color background_color;

@@ -9,9 +9,17 @@
 class Triangle : public Hittable {
 public:
 
-	Triangle(Vec3 _indices[3], int _material_id)
+	Triangle(
+		Vec3 _indices[3],
+		int _material_id,
+		const std::vector<std::string>& transformations,
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations
+	)
 		: indices{_indices[0], _indices[1], _indices[2]},
-		material_id(_material_id)
+		material_id(_material_id),
+		transformations(transformations)
 	{
 		Vec3 min = indices[0];
 		Vec3 max = indices[0];
@@ -30,9 +38,23 @@ public:
 		vec1 = vec1.cross(vec2);
 		vec1.normalize();
 		this->normal = vec1;
+
+		auto identity = glm::mat4(1.0f);
+		composite_transformation_matrix = calculateCompositeTransformationMatrix(
+			translations,
+			scalings,
+			rotations) * identity;
 	}
 
-	Triangle(Vec3 _indices[3], int _material_id, Vec3 _per_vertex_normals[3])
+	Triangle(
+		Vec3 _indices[3], 
+		int _material_id, 
+		Vec3 _per_vertex_normals[3],
+		const std::vector<std::string>& transformations,
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations
+	)
 		: indices{ _indices[0], 
 		_indices[1], 
 		_indices[2] },
@@ -40,7 +62,8 @@ public:
 		smooth_shading(true), 
 		per_vertex_normals{ _per_vertex_normals[0], 
 		_per_vertex_normals[1],
-		_per_vertex_normals[2] }
+		_per_vertex_normals[2] },
+		transformations(transformations)
 	{
 		Vec3 min = indices[0];
 		Vec3 max = indices[0];
@@ -59,6 +82,13 @@ public:
 		vec1 = vec1.cross(vec2);
 		vec1.normalize();
 		this->normal = vec1;
+
+
+		auto identity = glm::mat4(1.0f);
+		composite_transformation_matrix = calculateCompositeTransformationMatrix(
+			translations,
+			scalings,
+			rotations) * identity;
 	}
 
 
@@ -109,6 +139,7 @@ public:
 	}
 
 	AABB getAABB() const override { return bounding_box; }
+	glm::mat4 composite_transformation_matrix;
 
 private:
 	Vec3 normal;
@@ -117,6 +148,51 @@ private:
 	int material_id;
 	bool smooth_shading = false;
 	Vec3 per_vertex_normals[3];
+
+	glm::mat4 calculateCompositeTransformationMatrix(
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations)
+	{
+		auto res = glm::mat4(1.0f);
+		for (const auto& transform : transformations)
+		{
+			auto identity = glm::mat4(1.0f);
+			switch (transform[0])
+			{
+			case 't': // translation
+			{
+				int index = std::stoi(transform.substr(1));
+				auto& t = translations[index];
+				glm::vec3 translation = glm::vec3(t.tx, t.ty, t.tz);
+				res = glm::translate(identity, translation) * res;
+				break;
+			}
+			case 's': // scaling
+			{
+				int index = std::stoi(transform.substr(1));
+				auto& s = scalings[index];
+				glm::vec3 scaling = glm::vec3(s.sx, s.sy, s.sz);
+				res = glm::scale(identity, scaling) * res;
+				break;
+			}
+			case 'r': // rotation
+			{
+				int index = std::stoi(transform.substr(1));
+				auto& r = rotations[index];
+				glm::vec3 axis = glm::vec3(r.axis_x, r.axis_y, r.axis_z);
+				res = glm::rotate(identity, glm::radians(r.angle), axis) * res;
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		return res;
+	}
+
+
+	std::vector<std::string> transformations;
 
 	inline double det(const Vec3& c0, const Vec3& c1, const Vec3& c2) const
 	{

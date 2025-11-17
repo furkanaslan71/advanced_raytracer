@@ -63,3 +63,40 @@ const Interval& AABB::operator[](int axis) const
             throw std::out_of_range("Invalid axis index");
     }
 }
+
+AABB AABB::transformBox(const glm::mat4& matrix) const
+{
+   Vec3 corners[8];
+    corners[0] = Vec3(x.min, y.min, z.min);
+    corners[1] = Vec3(x.min, y.min, z.max);
+    corners[2] = Vec3(x.min, y.max, z.min);
+    corners[3] = Vec3(x.min, y.max, z.max);
+    corners[4] = Vec3(x.max, y.min, z.min);
+    corners[5] = Vec3(x.max, y.min, z.max);
+    corners[6] = Vec3(x.max, y.max, z.min);
+    corners[7] = Vec3(x.max, y.max, z.max);
+    AABB transformedBox;
+    for (auto& corner : corners)
+    {
+      corner = Vec3::glmVec3toVec3(glm::vec3(matrix * glm::vec4(corner.x, corner.y, corner.z, 1.0f)));
+    }
+
+// The followng section is pure autism by erenjanje35
+// let it stay for the fun of it
+
+#define COMP(axis) [](const Vec3& a, const Vec3& b) {return a.axis < b.axis;}
+#define FIND(kind, axis) double kind##_##axis = std::kind##_element(corners, corners + 8, COMP(axis))->axis
+    FIND(min, x);
+    FIND(max, x);
+		FIND(min, y);
+		FIND(max, y);
+		FIND(min, z);
+		FIND(max, z);
+#undef COMP
+#undef FIND
+    transformedBox.x = Interval(min_x, max_x);
+    transformedBox.y = Interval(min_y, max_y);
+		transformedBox.z = Interval(min_z, max_z);
+
+		return transformedBox;
+}

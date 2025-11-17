@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include "parser.hpp"
+#include <../external/glm/glm/glm.hpp>
+#include <../external/glm/glm/gtc/matrix_transform.hpp>
 
 class Vec3 {
 public:
@@ -83,6 +85,14 @@ public:
         if (i == 2) return z;
         throw std::out_of_range("vec3, axis index out of range");
     }
+
+    inline static Vec3 glmVec3toVec3(const glm::vec3 glm_vec) 
+    {
+        return Vec3(static_cast<double>(glm_vec.x),
+                    static_cast<double>(glm_vec.y),
+                    static_cast<double>(glm_vec.z));
+		}
+    
 
 };
 

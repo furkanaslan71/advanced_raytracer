@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <algorithm>
+#include "config.h"
 
 typedef struct Vec3f_ {
     float x, y, z;
@@ -23,12 +25,14 @@ typedef struct Camera_ {
     int image_width;
     int image_height;
     std::string image_name;
+    std::vector<std::string> transformations;
 } Camera_;
 
 typedef struct PointLight_ {
     int id;
     Vec3f_ position;
     Vec3f_ intensity;
+		std::vector<std::string> transformations;
 } PointLight_;
 
 typedef struct Material_ {
@@ -47,6 +51,7 @@ typedef struct Material_ {
 typedef struct Triangle_ {
     int material_id;
     int v0_id, v1_id, v2_id;
+    std::vector<std::string> transformations;
 } Triangle_;
 
 typedef struct Mesh_ {
@@ -54,13 +59,24 @@ typedef struct Mesh_ {
     int material_id;
 		bool smooth_shading;
     std::vector<Triangle_> faces;
+    std::vector<std::string> transformations;
 } Mesh_;
+
+typedef struct MeshInstance_ {
+  int id;
+  int base_mesh_id;
+	int material_id;
+	bool smooth_shading;
+	bool reset_transform;
+  std::vector<std::string> transformations;
+}MeshInstance_;
 
 typedef struct Sphere_ {
     int id;
     int material_id;
     int center_vertex_id;
     float radius;
+    std::vector<std::string> transformations;
 } Sphere_;
 
 typedef struct Plane_ {
@@ -68,7 +84,22 @@ typedef struct Plane_ {
     int material_id;
     int point_vertex_id;
     Vec3f_ normal;
+    std::vector<std::string> transformations;
 } Plane_;
+
+typedef struct Translation_ {
+   float tx, ty, tz;
+}Translation_;
+
+typedef struct Scaling_ {
+  float sx, sy, sz;
+}Scaling_;
+
+typedef struct Rotation_ {
+  float angle;
+  float axis_x, axis_y, axis_z;
+}Rotation_;
+	
 
 typedef struct Scene_ {
     Vec3f_ background_color;
@@ -80,7 +111,11 @@ typedef struct Scene_ {
     std::vector<PointLight_> point_lights;
     std::vector<Material_> materials;
     std::vector<Vec3f_> vertex_data;
+		std::vector<Translation_> translations;
+		std::vector<Scaling_> scalings;
+		std::vector<Rotation_> rotations;
     std::vector<Mesh_> meshes;
+		std::vector<MeshInstance_> mesh_instances;
     std::vector<Triangle_> triangles;
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;

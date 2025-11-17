@@ -84,11 +84,11 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth) const
 
 	HitRecord rec;
 	bool hit_plane = false;
-	hit_plane = this->hitPlanes(ray, Interval(renderer_info.shadow_ray_epsilon, INFINITY), rec);
+	hit_plane = this->hitPlanes(ray, Interval(renderer_info.intersection_test_epsilon, INFINITY), rec);
 
 	double closest_t = hit_plane ? rec.t : INFINITY;
 
-	if (!world.hit(ray, Interval(renderer_info.shadow_ray_epsilon, closest_t), rec))
+	if (!world.hit(ray, Interval(renderer_info.intersection_test_epsilon, closest_t), rec))
 	{
 		if (!hit_plane)
 		{
@@ -98,8 +98,6 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth) const
 				return Color(0, 0, 0);
 		}
 	}
-	if (renderer_info.backface_culling && !rec.front_face)
-		return Color(0, 0, 0);
 	return applyShading(ray, depth, rec);
 }
 
@@ -182,7 +180,11 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		}
 
 		Color reflectedColor = computeColor(reflectedRay, depth - 1);
-		Color L = reflectedColor * F_r + refractedColor * (1 - F_r);
+		//reflectedColor = Color(0.0);
+		Color L = reflectedColor * F_r
+			+ refractedColor * (1 - F_r)
+			;
+
 
 		// Absorption when exiting
 		if (!entering)
@@ -192,7 +194,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			L.g *= exp(-mat.absorption_coefficient.y * d);
 			L.b *= exp(-mat.absorption_coefficient.z * d);
 		}
-
+		//L = Color(0.0);
 		return color + L;
 	}
 
@@ -204,7 +206,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!world.hit(shadowRay, Interval(0, distance), shadowRec) 
+		if (!world.hit(shadowRay, Interval(renderer_info.intersection_test_epsilon, distance), shadowRec) 
 			&& !hitPlanes(shadowRay, Interval(0, distance), planeShadowRec))
 		{
 			// Diffuse

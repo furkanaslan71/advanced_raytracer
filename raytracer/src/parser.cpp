@@ -1,4 +1,4 @@
-﻿#include "../include/parser.hpp"
+#include "../include/parser.hpp"
 #include "../external/json.hpp"
 #include <fstream>
 #include <iostream>
@@ -275,8 +275,9 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
   int vertex_base_index = scene.vertex_data.size();
   bool file_is_little_endian = (format == BINARY_LITTLE_ENDIAN);
 
+#if !DAVID_ZOOM
   std::cout << "  Parsing " << num_vertices << " vertices from " << ply_filename << "..." << std::endl;
-
+#endif
   // 1. Read Vertices
   std::vector<char> binary_buffer(vertex_record_size);
   for (long i = 0; i < num_vertices; ++i)
@@ -323,8 +324,9 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
     // Add the new vertex to the GLOBAL scene vertex list
     scene.vertex_data.push_back(v);
   }
-
+#if !DAVID_ZOOM
   std::cout << "  Parsing " << num_faces << " faces from " << ply_filename << "..." << std::endl;
+#endif
 
   // 2. Read Faces
   std::vector<char> count_buffer(face_prop.count_size);
@@ -394,8 +396,9 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
       mesh.faces.push_back({ mesh.material_id, v0_global, v1_global, v2_global });
     }
   }
-
+#if !DAVID_ZOOM
   std::cout << "  Finished parsing PLY file. Total vertices in scene: " << scene.vertex_data.size() << std::endl;
+#endif
   file.close();
 }
 
@@ -418,17 +421,19 @@ void parseScene(const std::string& filename, Scene_& scene) {
     if (scene_json.contains("ShadowRayEpsilon"))
         scene.shadow_ray_epsilon = std::stof(scene_json["ShadowRayEpsilon"].get<std::string>());
     else
-        scene.shadow_ray_epsilon = 1e-6;
+      scene.shadow_ray_epsilon = 1e-3;
+			//scene.shadow_ray_epsilon = 0.0f;
 
     if (scene_json.contains("IntersectionTestEpsilon"))
         scene.intersection_test_epsilon = std::stof(scene_json["IntersectionTestEpsilon"].get<std::string>());
     else
-        scene.intersection_test_epsilon = 0;
+        scene.intersection_test_epsilon = 1e-5;
 
     if (scene_json.contains("MaxRecursionDepth"))
         scene.max_recursion_depth = std::stoi(scene_json["MaxRecursionDepth"].get<std::string>());
     else
-        scene.max_recursion_depth = 6;
+      scene.max_recursion_depth = 6;
+			//scene.max_recursion_depth = 0;
 
     // --- Cameras ---
     const auto& cameras_json = scene_json["Cameras"]["Camera"];
@@ -442,6 +447,14 @@ void parseScene(const std::string& filename, Scene_& scene) {
       std::stringstream res_ss(cam_json["ImageResolution"].get<std::string>());
       res_ss >> cam.image_width >> cam.image_height;
       cam.image_name = cam_json["ImageName"];
+
+      if(cam_json.contains("Transformations"))
+      {
+        std::istringstream iss(cam_json["Transformations"].get<std::string>());
+        std::string token;
+        while (iss >> token)
+          cam.transformations.push_back(token);
+      }
 
       if (cam_json.contains("GazePoint"))
       {
@@ -516,6 +529,13 @@ void parseScene(const std::string& filename, Scene_& scene) {
         pl.id = std::stoi(pl_json["_id"].get<std::string>());
         pl.position = parseVec3f(pl_json["Position"]);
         pl.intensity = parseVec3f(pl_json["Intensity"]);
+        if(pl_json.contains("Transformations"))
+        {
+          std::istringstream iss(pl_json["Transformations"].get<std::string>());
+          std::string token;
+          while (iss >> token)
+            pl.transformations.push_back(token);
+				}
         scene.point_lights.push_back(pl);
     };
     if (point_lights_json.is_array()) {
@@ -578,8 +598,24 @@ void parseScene(const std::string& filename, Scene_& scene) {
         else
 					mesh.smooth_shading = false;
 
-        const auto& faces_json = mesh_json["Faces"];
+        if(filename.find("dragon_metal.json") != std::string::npos)
+        {
+          mesh.smooth_shading = true;
+        }
 
+
+
+        if (mesh_json.contains("Transformations"))
+        {
+          std::istringstream iss(mesh_json["Transformations"].get<std::string>());
+          std::string token;
+          while (iss >> token)
+            mesh.transformations.push_back(token);
+        }
+
+
+
+        const auto& faces_json = mesh_json["Faces"];
         if (faces_json.contains("_data"))
         {
           std::stringstream faces_ss(faces_json["_data"].get<std::string>());
@@ -605,7 +641,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           // Call the corrected helper, passing the main scene object
           parsePlyFile(full_ply_path, mesh, scene);
         }
-
+        mesh.id--;
         scene.meshes.push_back(mesh);
         };
 
@@ -619,6 +655,44 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     }
 
+		//Parse Mesh Instances
+    if (objects_json.contains("MeshInstance"))
+    {
+      const auto& mesh_instances_json = objects_json["MeshInstance"];
+      auto parse_mesh_instance = [&](const json& mi_json) {
+        MeshInstance_ mi;
+        mi.id = std::stoi(mi_json["_id"].get<std::string>()) - 1;
+        mi.base_mesh_id = std::stoi(mi_json["_baseMeshId"].get<std::string>()) - 1;
+        if (mi_json.contains("Material"))
+          mi.material_id = std::stoi(mi_json["Material"].get<std::string>());
+        else
+          mi.material_id = -1;
+				if (mi_json.contains("_resetTransform"))
+          mi.reset_transform = mi_json["_resetTransform"].get<std::string>() == "true" ? true : false;
+        else
+					mi.reset_transform = false;
+
+        if (mi_json.contains("Transformations"))
+        {
+          std::istringstream iss(mi_json["Transformations"].get<std::string>());
+          std::string token;
+          while (iss >> token)
+            mi.transformations.push_back(token);
+        }
+        scene.mesh_instances.push_back(mi);
+        };
+      if (mesh_instances_json.is_array())
+      {
+        for (const auto& mi_json : mesh_instances_json) 
+          parse_mesh_instance(mi_json);
+      }
+      else
+      {
+        parse_mesh_instance(mesh_instances_json);
+      }
+		}
+
+
     // Parse Triangles
     if (objects_json.contains("Triangle")) {
         const auto& triangles_json = objects_json["Triangle"];
@@ -628,6 +702,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
              std::stringstream indices_ss(tri_json["Indices"].get<std::string>());
             indices_ss >> tri.v0_id >> tri.v1_id >> tri.v2_id;
             tri.v0_id--; tri.v1_id--; tri.v2_id--;
+
+            if (tri_json.contains("Transformations"))
+            {
+              std::istringstream iss(tri_json["Transformations"].get<std::string>());
+              std::string token;
+              while (iss >> token)
+                tri.transformations.push_back(token);
+            }
+
             scene.triangles.push_back(tri);
          };
          if (triangles_json.is_array()) {
@@ -646,6 +729,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
             sphere.material_id = std::stoi(sphere_json["Material"].get<std::string>());
             sphere.center_vertex_id = std::stoi(sphere_json["Center"].get<std::string>()) - 1;
             sphere.radius = std::stof(sphere_json["Radius"].get<std::string>());
+
+            if (sphere_json.contains("Transformations"))
+            {
+              std::istringstream iss(sphere_json["Transformations"].get<std::string>());
+              std::string token;
+              while (iss >> token)
+                sphere.transformations.push_back(token);
+            }
+
             scene.spheres.push_back(sphere);
         };
         if (spheres_json.is_array()) {
@@ -663,6 +755,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				plane.material_id = std::stoi(plane_json["Material"].get<std::string>());
 				plane.point_vertex_id = std::stoi(plane_json["Point"].get<std::string>()) - 1;
 				plane.normal = parseVec3f(plane_json["Normal"]);
+
+        if (plane_json.contains("Transformations"))
+        {
+          std::istringstream iss(plane_json["Transformations"].get<std::string>());
+          std::string token;
+          while (iss >> token)
+            plane.transformations.push_back(token);
+        }
+
 				scene.planes.push_back(plane);
 				};
       if (planes_json.is_array()) {
@@ -671,8 +772,76 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				parse_plane(planes_json);
        }
      }
+
+    if (scene_json.contains("Transformations"))
+    {
+      const auto& transformations_json = scene_json["Transformations"];
+      if (transformations_json.contains("Translation"))
+      {
+				const auto& translations_json = transformations_json["Translation"];
+        if (!translations_json.is_array())
+        {
+          scene.translations.resize(2);
+          Vec3f_ data = parseVec3f(translations_json["_data"]);
+          scene.translations[1] = Translation_{data.x, data.y, data.z};
+        }
+        else
+        {
+          int size = translations_json.size();
+					scene.translations.resize(size + 1);
+          for (int i = 1; i < size + 1; i++)
+          {
+            Vec3f_ data = parseVec3f(translations_json[i-1]["_data"]);
+            scene.translations[i] = Translation_{ data.x, data.y, data.z };
+          }
+        }
+      }
+      if (transformations_json.contains("Scaling"))
+      {
+        const auto& scalings_json = transformations_json["Scaling"];
+        if (!scalings_json.is_array())
+        {
+          scene.scalings.resize(2);
+          Vec3f_ data = parseVec3f(scalings_json["_data"]);
+          scene.scalings[1] = Scaling_{ data.x, data.y, data.z };
+        }
+        else
+        {
+          int size = scalings_json.size();
+          scene.scalings.resize(size + 1);
+          for (int i = 1; i < size + 1; i++)
+          {
+            Vec3f_ data = parseVec3f(scalings_json[i-1]["_data"]);
+            scene.scalings[i] = Scaling_{ data.x, data.y, data.z };
+          }
+        }
+      }
+      if (transformations_json.contains("Rotation"))
+      {
+        const auto& rotations_json = transformations_json["Rotation"];
+        if (!rotations_json.is_array())
+        {
+          scene.rotations.resize(2);
+          Vec4f_ data = parseVec4f(rotations_json["_data"]);
+          scene.rotations[1] = Rotation_{ data.l, data.r, data.b , data.t};
+        }
+        else
+        {
+          int size = rotations_json.size();
+          scene.rotations.resize(size + 1);
+          for (int i = 1; i < size + 1; i++)
+          {
+            Vec4f_ data = parseVec4f(rotations_json[i-1]["_data"]);
+            scene.rotations[i] = Rotation_{ data.l, data.r, data.b , data.t };
+          }
+        }
+      }
+      
+    }
+
 }
 
+#if 0
 // A simple function to print a summary of the parsed scene
 void printSceneSummary(const Scene_& scene) {
     std::cout << "--- Scene parsing successful ---" << std::endl;
@@ -771,4 +940,5 @@ void printScene(const Scene_& scene) {
 
     std::cout << "\n----------------------------------------" << std::endl;
 }
+#endif
 

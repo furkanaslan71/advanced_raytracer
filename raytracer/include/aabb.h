@@ -17,6 +17,7 @@ public:
     const Interval& axis(int i) const;
     bool hit(const Ray& ray, Interval ray_t) const;
     const Interval& operator[](int axis) const;
+		AABB transformBox(const glm::mat4& matrix) const;
 };
 
 #endif // AABB_H

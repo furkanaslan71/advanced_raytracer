@@ -7,11 +7,11 @@
 #include "../material/material_manager.h"
 #include "../include/bvh.h"
 
+#define BACKFACE_CULLING 0
 typedef struct RendererInfo {
 	float shadow_ray_epsilon;
 	float intersection_test_epsilon;
-	int max_recursion_depth;
-	bool backface_culling;
+	int max_recursion_depth;;
 }RendererInfo;
 
 
