@@ -117,10 +117,12 @@ INEK Machines Benchmark
 ![](images/two_berserkers.png)
 
 ### Davids Camera Zoom
-<video src="images/davids_camera_zoom.mp4" autoplay loop muted playsinline></video>
+![Davids Camera Zoom](images/davids_camera_zoom.gif)
 
 ### Davids Light Around
-<video src="images/davids_light.mp4" autoplay loop muted playsinline></video>
+![Davids Light Around](images/davids_light.gif)
 
 ### Davids Camera Around
-<video src="images/davids_camera.mp4" autoplay loop muted playsinline></video>
+![Davids Camera Around](images/davids_camera.gif)
+
+
