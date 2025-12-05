@@ -2,7 +2,7 @@
 
 MaterialManager::MaterialManager(const std::vector<Material_>& materials) 
 {
-	material_list.resize(materials.size() + 1);
+	material_list.resize(materials.size());
 	for (const auto& mat : materials) 
 	{
 		material_list[mat.id] = Material(mat);

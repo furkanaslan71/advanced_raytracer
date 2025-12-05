@@ -22,7 +22,7 @@ RenderManager::RenderManager(const Scene& _scene,
 
 void RenderManager::render() const
 {
-	const std::filesystem::path saveDir = "./output";
+  const std::filesystem::path saveDir = "./output";
 
 	if (!std::filesystem::exists(saveDir))
 	{
@@ -37,14 +37,19 @@ void RenderManager::render() const
 			return;
 		}
 	}
-	for(const auto& cam : scene.cameras)
+	for(const auto& cam : scene.pinhole_cameras)
 	{
 		std::vector<std::vector<Color>> image;
 		cam.render(technique, image);
-		// Here you would typically save the image to a file
-		
-		saveImage(saveDir.string(), cam.image_name, image);
+		saveImage(saveDir, cam.image_name, image);
 	}
+  for (const auto& cam : scene.distribution_cameras)
+  {
+    std::vector<std::vector<Color>> image;
+    cam.render(technique, image);
+    saveImage(saveDir, cam.image_name, image);
+  }
+  
 }
 
 void RenderManager::saveImage(const std::string& outputDir,

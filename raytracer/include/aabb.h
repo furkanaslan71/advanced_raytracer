@@ -17,6 +17,11 @@ public:
     const Interval& axis(int i) const;
     bool hit(const Ray& ray, Interval ray_t) const;
     const Interval& operator[](int axis) const;
+		AABB transformBox(const glm::mat4& matrix) const;
+    void expand(const Vec3& p);
+    void expand(const AABB& other);
+    Vec3 center() const;
+    int longest_axis() const;
 };
 
 #endif // AABB_H

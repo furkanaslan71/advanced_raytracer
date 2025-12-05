@@ -10,7 +10,8 @@ Material::Material()
 		phong_exponent(0.0f),
 		refraction_index(1.0f),
 		absorption_coefficient(),
-	absorption_index()
+	absorption_index(),
+	roughness()
 {}
 
 Material::Material(const Material_& _material)
@@ -23,6 +24,7 @@ Material::Material(const Material_& _material)
 			phong_exponent(_material.phong_exponent),
 			refraction_index(_material.refraction_index),
 			absorption_coefficient(_material.absorption_coefficient),
-			absorption_index(_material.absorption_index)
+			absorption_index(_material.absorption_index),
+			roughness(_material.roughness)
 {
 }

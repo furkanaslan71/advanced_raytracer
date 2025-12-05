@@ -9,9 +9,8 @@
 class Triangle : public Hittable {
 public:
 
-	Triangle(Vec3 _indices[3], int _material_id)
-		: indices{_indices[0], _indices[1], _indices[2]},
-		material_id(_material_id)
+	Triangle(Vec3 _indices[3])
+		: indices{_indices[0], _indices[1], _indices[2]}
 	{
 		Vec3 min = indices[0];
 		Vec3 max = indices[0];
@@ -32,15 +31,15 @@ public:
 		this->normal = vec1;
 	}
 
-	Triangle(Vec3 _indices[3], int _material_id, Vec3 _per_vertex_normals[3])
-		: indices{ _indices[0], 
-		_indices[1], 
-		_indices[2] },
-		material_id(_material_id), 
+	Triangle(Vec3 _indices[3], Vec3 _per_vertex_normals[3])
+		: 
+		indices{ _indices[0], _indices[1], _indices[2] },
 		smooth_shading(true), 
-		per_vertex_normals{ _per_vertex_normals[0], 
-		_per_vertex_normals[1],
-		_per_vertex_normals[2] }
+		per_vertex_normals{
+			_per_vertex_normals[0], 
+			_per_vertex_normals[1],
+			_per_vertex_normals[2] 
+		}
 	{
 		Vec3 min = indices[0];
 		Vec3 max = indices[0];
@@ -88,7 +87,6 @@ public:
 		{
 			rec.t = t;
 			rec.point = ray.origin + ray.direction * t;
-			rec.material_id = material_id;
 			if (this->smooth_shading)
 			{
 				Vec3 barycentric_coords = barycentricCoefficients(rec.point);
@@ -110,11 +108,19 @@ public:
 
 	AABB getAABB() const override { return bounding_box; }
 
+	static inline double getAreaTriangle(Vec3 v1, Vec3 v2, Vec3 v3)
+	{
+		Vec3 edge1 = v2 - v1;
+		Vec3 edge2 = v3 - v1;
+		Vec3 cross_product = edge1.cross(edge2);
+		double area = 0.5 * cross_product.length();
+		return area;
+	}
+
 private:
 	Vec3 normal;
 	Vec3 indices[3];
 	AABB bounding_box;
-	int material_id;
 	bool smooth_shading = false;
 	Vec3 per_vertex_normals[3];
 
@@ -149,7 +155,7 @@ private:
 		return Vec3(u, v, w);
 	}
 
-
+	
 };
 
 #endif // !TRIANGLE_H

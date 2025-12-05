@@ -5,11 +5,42 @@ Plane::Plane()
 	{
 }
 
-Plane::Plane(const Plane_& _plane, const std::vector<Vec3f_>& _vertex_data)
+Plane::Plane(
+	const Plane_& _plane,
+	const std::vector<Vec3f_>& _vertex_data,
+	Vec3 _motion_blur
+)
 	: id(_plane.id), material_id(_plane.material_id),
 	point(Vec3(_vertex_data[_plane.point_vertex_id])),
-	normal(Vec3(_plane.normal).normalize())
+	normal(Vec3(_plane.normal).normalize()),
+	motion_blur(_motion_blur)
 {
+	composite_transformation_matrix = _plane.transform_matrix;
+	if (composite_transformation_matrix.has_value())
+	{
+		//transform point and normal
+		glm::vec4 glm_point = glm::vec4(static_cast<float>(point.x),
+			static_cast<float>(point.y),
+			static_cast<float>(point.z),
+			1.0f);
+		glm::vec4 transformed_point = composite_transformation_matrix.value() * glm_point;
+		point = Vec3(
+			static_cast<double>(transformed_point.x),
+			static_cast<double>(transformed_point.y),
+			static_cast<double>(transformed_point.z)
+		);
+		glm::vec4 glm_normal = glm::vec4(static_cast<float>(normal.x),
+			static_cast<float>(normal.y),
+			static_cast<float>(normal.z),
+			0.0f);
+		glm::vec4 transformed_normal = glm::transpose(glm::inverse(composite_transformation_matrix.value())) * glm_normal;
+		normal = Vec3(
+			static_cast<double>(transformed_normal.x),
+			static_cast<double>(transformed_normal.y),
+			static_cast<double>(transformed_normal.z)
+		).normalize();
+	}
+	
 }
 bool Plane::hit(const Ray& ray, const Interval& interval, HitRecord& rec) const
 {

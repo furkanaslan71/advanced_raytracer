@@ -63,3 +63,76 @@ const Interval& AABB::operator[](int axis) const
             throw std::out_of_range("Invalid axis index");
     }
 }
+
+AABB AABB::transformBox(const glm::mat4& matrix) const
+{
+   Vec3 corners[8];
+    corners[0] = Vec3(x.min, y.min, z.min);
+    corners[1] = Vec3(x.min, y.min, z.max);
+    corners[2] = Vec3(x.min, y.max, z.min);
+    corners[3] = Vec3(x.min, y.max, z.max);
+    corners[4] = Vec3(x.max, y.min, z.min);
+    corners[5] = Vec3(x.max, y.min, z.max);
+    corners[6] = Vec3(x.max, y.max, z.min);
+    corners[7] = Vec3(x.max, y.max, z.max);
+    AABB transformedBox;
+    for (auto& corner : corners)
+    {
+      corner = Vec3(matrix * corner.toGlm4());
+    }
+
+// The followng section is pure autism by erenjanje35
+// let it stay for the fun of it
+
+#define COMP(axis) [](const Vec3& a, const Vec3& b) {return a.axis < b.axis;}
+#define FIND(kind, axis) double kind##_##axis = std::kind##_element(corners, corners + 8, COMP(axis))->axis
+    FIND(min, x);
+    FIND(max, x);
+		FIND(min, y);
+		FIND(max, y);
+		FIND(min, z);
+		FIND(max, z);
+#undef COMP
+#undef FIND
+    transformedBox.x = Interval(min_x, max_x);
+    transformedBox.y = Interval(min_y, max_y);
+		transformedBox.z = Interval(min_z, max_z);
+
+		return transformedBox;
+}
+
+void AABB::expand(const Vec3& p)
+{
+  x.min = std::min(x.min, (double)p.x);
+  x.max = std::max(x.max, (double)p.x);
+  y.min = std::min(y.min, (double)p.y);
+  y.max = std::max(y.max, (double)p.y);
+  z.min = std::min(z.min, (double)p.z);
+  z.max = std::max(z.max, (double)p.z);
+}
+
+void AABB::expand(const AABB& other)
+{
+  x.min = std::min(x.min, other.x.min);
+  x.max = std::max(x.max, other.x.max);
+  y.min = std::min(y.min, other.y.min);
+  y.max = std::max(y.max, other.y.max);
+  z.min = std::min(z.min, other.z.min);
+  z.max = std::max(z.max, other.z.max);
+}
+
+Vec3 AABB::center() const
+{
+  return Vec3(x.mid(), y.mid(), z.mid());
+}
+
+int AABB::longest_axis() const
+{
+  double dx = x.max - x.min;
+  double dy = y.max - y.min;
+  double dz = z.max - z.min;
+
+  if (dx > dy && dx > dz) return 0;
+  if (dy > dz) return 1;
+  return 2;
+}

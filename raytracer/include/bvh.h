@@ -7,19 +7,32 @@
 #include <algorithm>
 #include <random>
 
-class BvhNode : public Hittable{
+struct alignas(32) LinearBVHNode {
+	AABB bbox;
+	union {
+		int primitives_offset;
+		int right_child_offset;
+	};
+	uint16_t primitive_count;
+	uint8_t axis;
+	uint8_t padding;
+};
+
+struct TreeBVHNode;
+
+class BVH{
 public:
-	BvhNode();
-  BvhNode(std::vector<std::shared_ptr<Hittable>>& objects, int begin, int end);
+	BVH(std::vector<std::shared_ptr<Hittable>>& _primitives);
 
-  bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override;
-
-  AABB getAABB() const override;
-
+	bool intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const;
+	AABB getAABB() const;
+	void buildBVH();
 private:
-    std::shared_ptr<Hittable> left;
-    std::shared_ptr<Hittable> right;
-    AABB bounding_box;
+	
+	int buildFlatBVH(TreeBVHNode* node, int& offset);
+
+	std::vector<std::shared_ptr<Hittable>>& primitives_;
+	std::vector<LinearBVHNode> linear_nodes_;
 };
 
 #endif // !BVH_H

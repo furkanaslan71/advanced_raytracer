@@ -58,7 +58,7 @@ static double fresnelReflectance(double r_parallel, double r_perpendicular)
 
 BaseRayTracer::BaseRayTracer(Color& background_color,
 	LightSources& light_sources,
-	BvhNode& world,
+	std::shared_ptr<BVH> world,
 	std::vector<Plane>& planes,
 	MaterialManager& material_manager,
 	RendererInfo& renderer_info)
@@ -71,24 +71,24 @@ BaseRayTracer::BaseRayTracer(Color& background_color,
 {
 }
 
-Color BaseRayTracer::traceRay(const Ray& ray) const
+Color BaseRayTracer::traceRay(const Ray& ray, const RenderContext& context) const
 {
 	// Placeholder implementation: return background color
 	double min_t = INFINITY;
-	return computeColor(ray, renderer_info.max_recursion_depth + 1);
+	return computeColor(ray, renderer_info.max_recursion_depth + 1, context);
 }
 
-Color BaseRayTracer::computeColor(const Ray& ray, int depth) const
+Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext& context) const
 {
 	if (depth <= 0) return Color(0, 0, 0);
 
 	HitRecord rec;
 	bool hit_plane = false;
-	hit_plane = this->hitPlanes(ray, Interval(renderer_info.shadow_ray_epsilon, INFINITY), rec);
+	hit_plane = this->hitPlanes(ray, Interval(renderer_info.intersection_test_epsilon, INFINITY), rec);
 
 	double closest_t = hit_plane ? rec.t : INFINITY;
 
-	if (!world.hit(ray, Interval(renderer_info.shadow_ray_epsilon, closest_t), rec))
+	if (!world->intersect(ray, Interval(renderer_info.intersection_test_epsilon, closest_t), rec))
 	{
 		if (!hit_plane)
 		{
@@ -98,13 +98,11 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth) const
 				return Color(0, 0, 0);
 		}
 	}
-	if (renderer_info.backface_culling && !rec.front_face)
-		return Color(0, 0, 0);
-	return applyShading(ray, depth, rec);
+	return applyShading(ray, depth, rec, context);
 }
 
 Color BaseRayTracer::applyShading(const Ray& ray, 
-	int depth, HitRecord& rec) const
+	int depth, HitRecord& rec, const RenderContext& context) const
 {
 	Material mat = material_manager.getMaterialById(rec.material_id);
 	Color color = Color(mat.ambient_reflectance) * Color(light_sources.ambient_light);
@@ -113,8 +111,14 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	{
 		Vec3 wo = ray.direction * -1;
 		Vec3 wr = (rec.normal * (2 * (rec.normal.dot(wo)))) - wo;
-		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr);
-		color += computeColor(reflectedRay, depth - 1) * Color(mat.mirror_reflectance);
+		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
+
+		if (mat.roughness != 0)
+		{
+			reflectedRay.perturb(mat.roughness);
+		}
+		
+		color += computeColor(reflectedRay, depth - 1, context) * Color(mat.mirror_reflectance);
 	}
 	else if ((mat.type).compare("conductor") == 0)
 	{
@@ -142,8 +146,13 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		double rp = rp_num / rp_den;
 		double f_r = (rs + rp) * 0.5;
 
-		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr);
-		color += computeColor(reflectedRay, depth - 1) * f_r * mat.mirror_reflectance;
+		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
+		if (mat.roughness != 0)
+		{
+			reflectedRay.perturb(mat.roughness);
+		}
+
+		color += computeColor(reflectedRay, depth - 1, context) * f_r * mat.mirror_reflectance;
 	}
 	else if (mat.type == "dielectric")
 	{
@@ -170,19 +179,33 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 		// Reflection
 		Vec3 wr = reflect(wo, normal).normalize();
-		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr);
+
+		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
+
+		if (mat.roughness != 0)
+		{
+			reflectedRay.perturb(mat.roughness);
+		}
 
 		// Refraction
 		Color refractedColor(0);
 		if (sin2ThetaT <= 1.0)
 		{
 			Vec3 wt = (wo * -1) * eta + normal * (eta * cosTheta - sqrt(1 - sin2ThetaT));
-			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt.normalize());
-			refractedColor = computeColor(refractedRay, depth - 1);
+			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt.normalize(), ray.time);
+			if (mat.roughness != 0)
+			{
+				refractedRay.perturb(mat.roughness);
+			}
+			refractedColor = computeColor(refractedRay, depth - 1, context);
 		}
 
-		Color reflectedColor = computeColor(reflectedRay, depth - 1);
-		Color L = reflectedColor * F_r + refractedColor * (1 - F_r);
+		Color reflectedColor = computeColor(reflectedRay, depth - 1, context);
+		//reflectedColor = Color(0.0);
+		Color L = reflectedColor * F_r
+			+ refractedColor * (1 - F_r)
+			;
+
 
 		// Absorption when exiting
 		if (!entering)
@@ -192,7 +215,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			L.g *= exp(-mat.absorption_coefficient.y * d);
 			L.b *= exp(-mat.absorption_coefficient.z * d);
 		}
-
+		//L = Color(0.0);
 		return color + L;
 	}
 
@@ -201,11 +224,16 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		Vec3 wi = Vec3(light.position) - rec.point;
 		double distance = wi.length();
 		wi.normalize();
-		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi);
+		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi, ray.time);
+		Ray shadowRayPlane = Ray(rec.point 
+			+ rec.normal 
+			* static_cast<double>(renderer_info.shadow_ray_epsilon) 
+			* 1e-2
+			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!world.hit(shadowRay, Interval(0, distance), shadowRec) 
-			&& !hitPlanes(shadowRay, Interval(0, distance), planeShadowRec))
+		if (!world->intersect(shadowRay, Interval(renderer_info.intersection_test_epsilon, distance), shadowRec) 
+			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 			// Diffuse
 			double cosTheta = std::max(double(0.0f), rec.normal.dot(wi));
@@ -218,6 +246,43 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			h.normalize();
 			double cosAlpha = std::max(double(0.0f), rec.normal.dot(h));
 			color += Color(mat.specular_reflectance) * Color(light.intensity) * (pow(cosAlpha, mat.phong_exponent) / (distance * distance));
+		}
+	}
+	for (const auto& light : light_sources.area_lights)
+	{
+		Vec3 light_sample_point = (*context.area_light_samples)[depth - 1][light.id][context.sample_index];
+
+		// Calculate Shadow Ray towards this specific random point
+		Vec3 wi = light_sample_point - rec.point;
+		double distance = wi.length();
+		wi = wi.normalize();
+		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi, ray.time);
+		Ray shadowRayPlane = Ray(rec.point
+			+ rec.normal
+			* static_cast<double>(renderer_info.shadow_ray_epsilon)
+			* 1e-2
+			, wi, ray.time);
+		HitRecord shadowRec;
+		HitRecord planeShadowRec;
+		if (!world->intersect(shadowRay, Interval(renderer_info.intersection_test_epsilon, distance), shadowRec)
+			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
+		{
+			float area_of_light = light.edge * light.edge;
+			double cos_alpha_light = std::abs((wi * -1.0).dot(light.normal));
+			float distance2 = distance * distance;
+			float attenuation = area_of_light * cos_alpha_light / distance2;
+			// Diffuse
+			double cosTheta = std::max(double(0.0f), rec.normal.dot(wi));
+			color += Color(mat.diffuse_reflectance) * Color(light.radiance) * attenuation * cosTheta;
+
+			// Specular
+			Vec3 wo = (ray.origin - rec.point);
+			wo.normalize();
+			Vec3 h = (wi + wo);
+			h.normalize();
+			double cosAlpha = std::max(double(0.0f), rec.normal.dot(h));
+			color += Color(mat.specular_reflectance) * Color(light.radiance) *
+				attenuation * pow(cosAlpha, mat.phong_exponent);
 		}
 	}
 	return color;

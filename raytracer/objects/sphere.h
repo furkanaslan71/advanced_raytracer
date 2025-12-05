@@ -10,10 +10,11 @@ class Sphere : public Hittable {
 public:
 	Vec3 center;
 	double radius;
-	int material_id;
 
-	Sphere(Vec3 _center, double _radius, int _material_id)
-		: center(_center), radius(_radius), material_id(_material_id)
+	Sphere(Vec3 _center, double _radius)
+		: 
+		center(_center), 
+		radius(_radius)
 	{
 		bounding_box = AABB(center - Vec3(radius, radius, radius), 
 														center + Vec3(radius, radius, radius));
@@ -44,7 +45,6 @@ public:
 				rec.t = t;
 				rec.point = hitPoint;
 				rec.normal = normal;
-				rec.material_id = material_id;
 				rec.set_front_face(ray);
 				return true;
 			}

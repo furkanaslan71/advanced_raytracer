@@ -1,6 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 #include "vec3.h"
+#include "../external/gsl/gsl"
 
 class Color {
 public:
@@ -8,6 +9,19 @@ public:
 
   Color() : r(0), g(0), b(0) {}
   Color(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
+  Color(const Color& other)
+  {
+    r = other.r;
+    g = other.g;
+    b = other.b;
+  }
+  Color(const Vec3& vec)
+  {
+    r = vec.x;
+    g = vec.y;
+    b = vec.z;
+  }
+
   Color clamp()
   {
     static double max = 255.0f;
@@ -19,21 +33,6 @@ public:
     if (b < 0) b = 0;
     return *this;
   }
-
-  Color(const Color& other)
-  {
-    r = other.r;
-    g = other.g;
-    b = other.b;
-  }
-
-  Color(const Vec3& vec)
-  {
-    r = vec.x;
-    g = vec.y;
-    b = vec.z;
-  }
-
 
   inline Color operator*=(const Color& other)
   {
@@ -71,6 +70,11 @@ public:
     return Color(r * s, g * s, b * s);
   }
 
+  inline Color operator/(double s) const
+  {
+    Expects(s != 0);
+    return Color(r / s, g / s, b / s);
+  }
 };
 
 #endif // COLOR_H

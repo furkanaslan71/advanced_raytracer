@@ -22,6 +22,7 @@ public:
 	float refraction_index;
 	Vec3 absorption_coefficient;
 	float absorption_index;
+	float roughness;
 };
 
 
