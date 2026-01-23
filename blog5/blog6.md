@@ -187,42 +187,54 @@ You will notices that I couldn't put some of the scenes' outputs as I know that 
 
 
 Killeroo Blinn Phong
+
 ![](images/brdf/killeroo_blinnphong.exr_phot.png)
 ![](images/brdf/killeroo_blinnphong_closeup.exr_phot.png)
 
 Killeroo Torrance Sparrow
+
 ![](images/brdf/killeroo_torrancesparrow.exr_phot.png)
 ![](images/brdf/killeroo_torrancesparrow_closeup.exr_phot.png)
 
 Cornellbox Jaroslav Diffuse
+
 ![](images/directLight/cornellbox_jaroslav_diffuse.exr_phot.png)
 
 
 Cornellbox Jaroslav Glossy
+
 ![](images/directLight/cornellbox_jaroslav_glossy.exr_phot.png)
 
 Cornell Diffuse Default
+
 ![](images/pathTracing/cornellDiffuse/diffuse_cornell_box_default.exr_phot.png)
 
 Cornell Diffuse Importance
+
 ![](images/pathTracing/cornellDiffuse/diffuse_cornell_box_importance.exr_phot.png)
 
 Cornell Diffuse Importance Russian Roulette with Splitting = 4, Samples=225, MinRecursion=4
+
 ![](images/pathTracing/cornellDiffuse/diffuse_cornell_box_importance_russian.exr_phot.png)
 
 Cornell Glass Mirror Default
+
 ![](images/pathTracing/cornellGlassMirror/cornell_box_default.exr_phot.png)
 
 Cornell Glass Mirror Importance
+
 ![](images/pathTracing/cornellGlassMirror/cornell_box_importance.exr_phot.png)
 
 Cornell Glass Mirror Importance Russian Roulette with Splitting = 4, Samples=225, MinRecursion=4
+
 ![](images/pathTracing/cornellGlassMirror/cornell_box_importance_russian.exr_phot.png)
 
 Cornell Prism Light
+
 ![](images/pathTracing/cornellPrismLight/cornellbox_prism_light.exr_phot.png)
 
 Cornell Sphere Light
+
 ![](images/pathTracing/cornellSphereLight/cornellbox_sphere_light.exr_phot.png)
 
 ## SSS Dragon
